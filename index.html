@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Reservas - Salas de Reuniones</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --secondary: #4285f4;
+            --accent: #fbbc04;
+            --light: #f8f9fa;
+            --dark: #202124;
+            --success: #0f9d58;
+            --danger: #ea4335;
+            --warning: #fbbc04;
+            --gray: #5f6368;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn:hover {
+            background-color: #0d62c9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background-color: #d33426;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: #0c8749;
+        }
+        
+        .calendar-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .calendar {
+            flex: 2;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .calendar-header {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            background-color: var(--primary);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        
+        .calendar-day {
+            background-color: white;
+            border-radius: 6px;
+            padding: 12px;
+            min-height: 120px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+            color: var(--dark);
+        }
+        
+        .other-month {
+            opacity: 0.4;
+            background-color: #f9f9f9;
+        }
+        
+        .today {
+            background-color: #e8f0fe;
+            border: 2px solid var(--primary);
+        }
+        
+        .reservation {
+            background-color: var(--secondary);
+            color: white;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .sidebar {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            min-width: 300px;
+        }
+        
+        .google-integration {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px dashed var(--primary);
+        }
+        
+        .time-slots {
+            display: none;
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .time-slot {
+            padding: 12px;
+            text-align: center;
+            background-color: #f0f6ff;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #d0e1ff;
+        }
+        
+        .time-slot:hover {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .time-slot.reserved {
+            background-color: #ffeceb;
+            color: var(--danger);
+            cursor: not-allowed;
+            border: 1px solid #ffcdd2;
+        }
+        
+        .time-slot.selected {
+            background-color: var(--success);
+            color: white;
+            border: 1px solid var(--success);
+        }
+        
+        .reservation-form {
+            display: none;
+            margin-top: 30px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 18px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .instructions {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .calendar-container {
+                flex-direction: column;
+            }
+            
+            .calendar {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
+                padding: 10px;
+            }
+            
+            .calendar-day {
+                min-height: 80px;
+                padding: 8px;
+            }
+            
+            .reservation {
+                font-size: 0.7rem;
+                padding: 3px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema de Reservas de Salas</h1>
+            <p>Gestiona y comparte el calendario de reservas con Google Calendar</p>
+        </header>
+        
+        <div class="controls">
+            <div class="month-nav">
+                <button id="prev-month" class="btn">← Anterior</button>
+                <h2 id="current-month">Mayo 2023</h2>
+                <button id="next-month" class="btn">Siguiente →</button>
+            </div>
+            <button id="new-reservation" class="btn">Nueva reserva</button>
+        </div>
+        
+        <div class="calendar-container">
+            <div class="calendar">
+                <div class="calendar-header">
+                    <div>Lun</div>
+                    <div>Mar</div>
+                    <div>Mié</div>
+                    <div>Jue</div>
+                    <div>Vie</div>
+                    <div>Sáb</div>
+                    <div>Dom</div>
+                </div>
+                <!-- Los días del calendario se generarán con JavaScript -->
+            </div>
+            
+            <div class="sidebar">
+                <h3>Reservas de Hoy</h3>
+                <div id="today-reservations">
+                    <p>Cargando reservas de hoy...</p>
+                </div>
+                
+                <div class="google-integration">
+                    <h3>Compartir con Google Calendar</h3>
+                    <div class="instructions">
+                        <p>Para compartir este calendario con los gerentes:</p>
+                        <ol>
+                            <li>Haz clic en el botón "Exportar a Google Calendar"</li>
+                            <li>Inicia sesión en tu cuenta de Google</li>
+                            <li>Selecciona los gerentes con quienes quieres compartirlo</li>
+                            <li>Configura los permisos (recomendado: "Puede ver todos los detalles")</li>
+                        </ol>
+                    </div>
+                    <button id="export-google" class="btn btn-success">Exportar a Google Calendar</button>
+                    <button id="sync-google" class="btn">Sincronizar con Google</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="time-slots" class="time-slots">
+            <h3>Selecciona un horario para el <span id="selected-date"></span></h3>
+            <div class="time-grid">
+                <!-- Los horarios se generarán con JavaScript -->
+            </div>
+        </div>
+        
+        <div id="reservation-form" class="reservation-form">
+            <h3>Completa los datos de tu reserva</h3>
+            <form id="booking-form">
+                <div class="form-group">
+                    <label for="reservation-date">Fecha:</label>
+                    <input type="text" id="reservation-date" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reservation-time">Horario:</label>
+                    <input type="text" id="reservation-time" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="room">Sala:</label>
+                    <select id="room">
+                        <option value="sala1">Sala de Reuniones 1 (Capacidad: 8 personas)</option>
+                        <option value="sala2">Sala de Reuniones 2 (Capacidad: 12 personas)</option>
+                        <option value="sala3">Sala de Conferencias (Capacidad: 25 personas)</option>
+                        <option value="sala4">Sala Ejecutiva (Capacidad: 6 personas)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title">Título de la reunión:</label>
+                    <input type="text" id="title" required placeholder="Ej: Revisión de proyecto Q3">
+                </div>
+                
+                <div class="form-group">
+                    <label for="organizer">Organizador:</label>
+                    <input type="text" id="organizer" required placeholder="Tu nombre y departamento">
+                </div>
+                
+                <div class="form-group">
+                    <label for="participants">Participantes:</label>
+                    <input type="text" id="participants" placeholder="Nombres o departamentos de los participantes">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Notas adicionales:</label>
+                    <textarea id="notes" placeholder="Equipamiento necesario, detalles de la reunión, etc."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-success">Confirmar reserva</button>
+                <button type="button" id="cancel-booking" class="btn btn-danger">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Variables globales
+            let currentDate = new Date();
+            let selectedDate = null;
+            let selectedTime = null;
+            let reservations = JSON.parse(localStorage.getItem('roomReservations')) || [];
+            
+            // Elementos del DOM
+            const currentMonthElement = document.getElementById('current-month');
+            const calendarElement = document.querySelector('.calendar');
+            const timeSlotsElement = document.getElementById('time-slots');
+            const selectedDateElement = document.getElementById('selected-date');
+            const timeGridElement = document.querySelector('.time-grid');
+            const reservationFormElement = document.getElementById('reservation-form');
+            const reservationDateElement = document.getElementById('reservation-date');
+            const reservationTimeElement = document.getElementById('reservation-time');
+            const bookingFormElement = document.getElementById('booking-form');
+            const todayReservationsElement = document.getElementById('today-reservations');
+            
+            // Inicializar el calendario
+            function initCalendar() {
+                renderCalendar();
+                updateTodayReservations();
+                setupEventListeners();
+            }
+            
+            // Configurar event listeners
+            function setupEventListeners() {
+                document.getElementById('prev-month').addEventListener('click', () => {
+                    currentDate.setMonth(currentDate.getMonth() - 1);
+                    renderCalendar();
+                });
+                
+                document.getElementById('next-month').addEventListener('click', () => {
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                    renderCalendar();
+                });
+                
+                document.getElementById('new-reservation').addEventListener('click', () => {
+                    selectedDate = new Date();
+                    showTimeSlots();
+                });
+                
+                document.getElementById('cancel-booking').addEventListener('click', () => {
+                    reservationFormElement.style.display = 'none';
+                    resetSelection();
+                });
+                
+                document.getElementById('export-google').addEventListener('click', exportToGoogleCalendar);
+                
+                document.getElementById('sync-google').addEventListener('click', syncWithGoogle);
+                
+                bookingFormElement.addEventListener('submit', handleReservationSubmit);
+            }
+            
+            // Renderizar el calendario
+            function renderCalendar() {
+                // Actualizar el título del mes actual
+                currentMonthElement.textContent = formatMonthYear(currentDate);
+                
+                // Limpiar el calendario (excepto la cabecera)
+                const existingDays = document.querySelectorAll('.calendar-day');
+                existingDays.forEach(day => day.remove());
+                
+                // Obtener el primer día del mes y el último día del mes
+                const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                
+                // Calcular el día de la semana del primer día (0 = Domingo, 1 = Lunes, etc.)
+                let firstDayIndex = firstDay.getDay();
+                // Ajustar para que la semana comience en lunes (1)
+                firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+                
+                // Generar los días del mes anterior (si es necesario)
+                const prevMonthLastDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0).getDate();
+                for (let i = 0; i < firstDayIndex; i++) {
+                    const day = prevMonthLastDay - firstDayIndex + i + 1;
+                    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, day);
+                    addDayToCalendar(day, date, true);
+                }
+                
+                // Generar los días del mes actual
+                for (let i = 1; i <= lastDay.getDate(); i++) {
+                    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), i);
+                    addDayToCalendar(i, date, false);
+                }
+                
+                // Generar los días del próximo mes (si es necesario)
+                const totalCells = 42; // 6 semanas * 7 días
+                const remainingCells = totalCells - (firstDayIndex + lastDay.getDate());
+                for (let i = 1; i <= remainingCells; i++) {
+                    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, i);
+                    addDayToCalendar(i, date, true);
+                }
+            }
+            
+            // Añadir un día al calendario
+            function addDayToCalendar(dayNumber, date, isOtherMonth) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                if (isOtherMonth) {
+                    dayElement.classList.add('other-month');
+                }
+                
+                // Comprobar si es hoy
+                const today = new Date();
+                if (date.getDate() === today.getDate() && 
+                    date.getMonth() === today.getMonth() && 
+                    date.getFullYear() === today.getFullYear()) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Añadir número del día
+                const dayNumberElement = document.createElement('div');
+                dayNumberElement.className = 'day-number';
+                dayNumberElement.textContent = dayNumber;
+                dayElement.appendChild(dayNumberElement);
+                
+                // Añadir reservas existentes para este día
+                const dayReservations = getReservationsForDate(date);
+                dayReservations.forEach(reservation => {
+                    const reservationElement = document.createElement('div');
+                    reservationElement.className = 'reservation';
+                    reservationElement.textContent = `${reservation.time} - ${reservation.title}`;
+                    reservationElement.title = `${reservation.title} (${reservation.organizer})`;
+                    dayElement.appendChild(reservationElement);
+                });
+                
+                // Añadir evento click para seleccionar el día
+                dayElement.addEventListener('click', () => {
+                    if (!isOtherMonth) {
+                        selectedDate = date;
+                        showTimeSlots();
+                    }
+                });
+                
+                calendarElement.appendChild(dayElement);
+            }
+            
+            // Mostrar los horarios disponibles para la fecha seleccionada
+            function showTimeSlots() {
+                selectedDateElement.textContent = formatDate(selectedDate);
+                timeGridElement.innerHTML = '';
+                
+                // Generar horarios de 8:00 a 20:00 en intervalos de 30 minutos
+                for (let hour = 8; hour <= 20; hour++) {
+                    for (let minute = 0; minute < 60; minute += 30) {
+                        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                        const timeSlotElement = document.createElement('div');
+                        timeSlotElement.className = 'time-slot';
+                        timeSlotElement.textContent = time;
+                        
+                        // Comprobar si el horario ya está reservado
+                        const isReserved = isTimeSlotReserved(selectedDate, time);
+                        if (isReserved) {
+                            timeSlotElement.classList.add('reserved');
+                        } else {
+                            timeSlotElement.addEventListener('click', () => selectTimeSlot(time, timeSlotElement));
+                        }
+                        
+                        timeGridElement.appendChild(timeSlotElement);
+                    }
+                }
+                
+                timeSlotsElement.style.display = 'block';
+                reservationFormElement.style.display = 'none';
+            }
+            
+            // Seleccionar un horario
+            function selectTimeSlot(time, element) {
+                // Deseleccionar cualquier horario previamente seleccionado
+                const previouslySelected = document.querySelector('.time-slot.selected');
+                if (previouslySelected) {
+                    previouslySelected.classList.remove('selected');
+                }
+                
+                // Seleccionar el nuevo horario
+                element.classList.add('selected');
+                selectedTime = time;
+                
+                // Mostrar el formulario de reserva
+                showReservationForm();
+            }
+            
+            // Mostrar el formulario de reserva
+            function showReservationForm() {
+                reservationDateElement.value = formatDate(selectedDate);
+                reservationTimeElement.value = selectedTime;
+                reservationFormElement.style.display = 'block';
+            }
+            
+            // Manejar el envío del formulario de reserva
+            function handleReservationSubmit(e) {
+                e.preventDefault();
+                
+                const newReservation = {
+                    id: Date.now(),
+                    date: selectedDate.toISOString().split('T')[0],
+                    time: selectedTime,
+                    room: document.getElementById('room').value,
+                    title: document.getElementById('title').value,
+                    organizer: document.getElementById('organizer').value,
+                    participants: document.getElementById('participants').value,
+                    notes: document.getElementById('notes').value
+                };
+                
+                // Añadir la reserva al array
+                reservations.push(newReservation);
+                
+                // Guardar en localStorage
+                localStorage.setItem('roomReservations', JSON.stringify(reservations));
+                
+                // Resetear el formulario
+                bookingFormElement.reset();
+                
+                // Ocultar el formulario
+                reservationFormElement.style.display = 'none';
+                timeSlotsElement.style.display = 'none';
+                
+                // Actualizar el calendario
+                renderCalendar();
+                updateTodayReservations();
+                
+                // Mostrar mensaje de éxito
+                alert('¡Reserva realizada con éxito!');
+            }
+            
+            // Obtener reservas para una fecha específica
+            function getReservationsForDate(date) {
+                const dateString = date.toISOString().split('T')[0];
+                return reservations.filter(reservation => reservation.date === dateString);
+            }
+            
+            // Actualizar las reservas de hoy
+            function updateTodayReservations() {
+                const today = new Date();
+                const todayString = today.toISOString().split('T')[0];
+                const todayReservations = reservations.filter(reservation => reservation.date === todayString);
+                
+                if (todayReservations.length === 0) {
+                    todayReservationsElement.innerHTML = '<p>No hay reservas para hoy.</p>';
+                } else {
+                    let html = '';
+                    todayReservations.forEach(reservation => {
+                        html += `
+                            <div class="reservation">
+                                <strong>${reservation.time}</strong> - ${reservation.title}
+                                <br><small>Sala: ${reservation.room} | Organiza: ${reservation.organizer}</small>
+                            </div>
+                        `;
+                    });
+                    todayReservationsElement.innerHTML = html;
+                }
+            }
+            
+            // Comprobar si un horario está reservado
+            function isTimeSlotReserved(date, time) {
+                const dateString = date.toISOString().split('T')[0];
+                return reservations.some(reservation => 
+                    reservation.date === dateString && reservation.time === time
+                );
+            }
+            
+            // Resetear la selección
+            function resetSelection() {
+                selectedDate = null;
+                selectedTime = null;
+                
+                const selectedTimeSlot = document.querySelector('.time-slot.selected');
+                if (selectedTimeSlot) {
+                    selectedTimeSlot.classList.remove('selected');
+                }
+            }
+            
+            // Exportar a Google Calendar
+            function exportToGoogleCalendar() {
+                // En una implementación real, esto se conectaría a la API de Google Calendar
+                alert('En una implementación real, esto exportaría todas las reservas a Google Calendar y compartiría el calendario con los gerentes.');
+                
+                // Simulación de exportación
+                const googleCalendarLink = 'https://calendar.google.com/calendar/r?tab=rc';
+                window.open(googleCalendarLink, '_blank');
+            }
+            
+            // Sincronizar con Google Calendar
+            function syncWithGoogle() {
+                alert('Sincronizando con Google Calendar...');
+                // En una implementación real, esto sincronizaría las reservas con Google Calendar
+            }
+            
+            // Formatear fecha como "dd/mm/aaaa"
+            function formatDate(date) {
+                return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+            }
+            
+            // Formatear mes y año como "Mes Año"
+            function formatMonthYear(date) {
+                const months = [
+                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ];
+                return `${months[date.getMonth()]} ${date.getFullYear()}`;
+            }
+            
+            // Inicializar el calendario
+            initCalendar();
+        });
+    </script>
+</body>
+</html>
